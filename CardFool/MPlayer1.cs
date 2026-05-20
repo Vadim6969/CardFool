@@ -5,35 +5,38 @@ namespace CardFool
 {
     internal class MPlayer1
     {
-        private string name = "Vasya";
-        private List<SCard> hand = new List<SCard>();       // карты на руке
-        private HashSet<string> seenCards = new HashSet<string>();
-        private const int DeckSize = 36;                    // размер колоды
-        private const int MinSuit = 0;                      // минимальный номер масти в enum Suits
-        private const int MaxSuit = 3;                      // максимальный номер масти в enum Suits
-        private const int MinRank = 6;                      // младшая карта в колоде
-        private const int MaxRank = 14;                     // старшая карта в колоде, туз
-        private const int LowRank = 11;                     // валет и ниже считаются дешевыми картами
-        private const int HighRank = 12;                    // дама и выше считаются старшими картами
-        private const int EndgameHandLimit = 3;             // при таком числе карт на руке играем как в эндшпиле
-        private const int EndgameUnknownLimit = 8;          // если неизвестных карт мало, включаем эндшпильную оценку
-        private const int EarlyTrumpCost = 100;             // высокая цена козыря в начале и середине игры
-        private const int EndgameTrumpCost = 35;            // сниженная цена козыря в конце игры
-        private const int AggressiveTrumpHandLimit = 2;     // козыри можно подкидывать агрессивно только при малой руке
-        private const int PairRankDiscount = 2;             // скидка карте, если есть еще карта такого же ранга
-        private const int HighCardCost = 4;                 // штраф за старшую некозырную карту, ее полезно сохранить
-        private const int HighestRemainingEarlyCost = 2;    // небольшой штраф за карту, старше которой не видно в масти
-        private const int HighestRemainingEndgameCost = 4;  // в эндшпиле такую карту сохраняем сильнее
-        private const int EndgameHardAttackBonus = 8;       // бонус к атаке картой, которую трудно побить в эндшпиле
-        private const int LowCardThrowAwayBonus = 8;        // бонус к сбросу мелкой карты, когда соперник уже берет
-        private const int HardCardThrowAwayPenalty = 12;    // не сбрасываем зря карту, которую трудно побить
-        private const int EarlyPressureBonus = 4;           // умеренное давление сильной картой до эндшпиля
-        private const int EndgamePressureBonus = 12;        // сильное давление труднобьющейся картой в эндшпиле
-        private const int HighestSuitPressureBonus = 6;     // бонус карте, если неизвестных старших в этой масти нет
-        private const int TrumpDefenseReservePenalty = 12;  // штраф за трату козыря на защиту, пока козырей еще много
-        private const int EarlySafeCoverPenalty = 3;        // небольшой штраф за расход надежной карты в начале игры
-        private const int EndgameSafeCoverPenalty = 8;      // в эндшпиле надежные карты бережем сильнее
-        private const int UnknownTrumpReserveLimit = 2;     // порог, при котором неизвестных козырей уже мало
+        private readonly string name = "Vasya";
+        private readonly List<SCard> hand = new List<SCard>();       // карты на руке
+        private readonly HashSet<string> seenCards = new HashSet<string>();
+        private const int DeckSize = 36;                    // всего карт в игре
+        private const int MinSuit = 0;                      // первая масть в enum Suits
+        private const int MaxSuit = 3;                      // последняя масть в enum Suits
+        private const int MinRank = 6;                      // минимальный ранг карты в колоде
+        private const int MaxRank = 14;                     // максимальный ранг карты в колоде, туз
+        private const int LowRank = 11;                     // ранг до валета включительно считаем мелкой картой для сброса
+        private const int HighRank = 12;                    // с дамы карта считается старшей и ее не сбрасываем без причины
+        private const int EndgameHandLimit = 3;             // если у нас карт не больше этого числа, пора играть агрессивнее
+        private const int EndgameUnknownLimit = 8;          // если неизвестных карт не больше этого числа, считаем игру близкой к концу
+        private const int EarlyTrumpCost = 100;             // добавляется к цене козыря до эндшпиля, чтобы бот берег козыри
+        private const int EndgameTrumpCost = 35;            // добавляется к цене козыря в эндшпиле, чтобы бот чаще использовал козыри
+        private const int AggressiveTrumpHandLimit = 2;     // если карт больше, козыри не подкидываем даже когда соперник берет
+        private const int PairRankDiscount = 2;             // уменьшает цену карты, если в руке есть еще карта такого же ранга
+        private const int HighCardCost = 4;                 // добавляется к цене дамы, короля и туза не козырной масти
+        private const int HighestRemainingEarlyCost = 2;    // до эндшпиля слегка бережем карту, у которой не видно старших в масти
+        private const int HighestRemainingEndgameCost = 4;  // в эндшпиле сильнее бережем карту, у которой не видно старших в масти
+        private const int EndgameHardAttackBonus = 8;       // в эндшпиле уменьшает цену карты, которую сопернику трудно побить
+        private const int LowCardThrowAwayBonus = 8;        // уменьшает цену мелкой карты при сбросе на соперника, который берет
+        private const int HardCardThrowAwayPenalty = 12;    // увеличивает цену труднобьющейся карты, чтобы не скинуть ее как мусор
+        private const int EarlyPressureBonus = 4;           // до эндшпиля немного поощряет подкидывание труднобьющейся карты
+        private const int EndgamePressureBonus = 12;        // в эндшпиле сильно поощряет подкидывание труднобьющейся карты
+        private const int HighestSuitPressureBonus = 6;     // уменьшает цену карты, если неизвестных старших карт этой масти нет
+        private const int TrumpDefenseReservePenalty = 12;  // добавляется к цене козырной защиты, если неизвестных козырей еще много
+        private const int EarlySafeCoverPenalty = 3;        // до эндшпиля слегка бережем защитную карту, которую трудно перебить
+        private const int EndgameSafeCoverPenalty = 8;      // в эндшпиле сильнее бережем защитную карту, которую трудно перебить
+        private const int UnknownHigherTrumpLimit = 1;      // козырь считаем труднобьющимся, если неизвестных старших козырей не больше
+        private const int UnknownTrumpReserveLimit = 2;     // если неизвестных козырей не больше, некозырная сильная карта почти безопасна
+
+      
 
         // Возвращает имя игрока
         public string GetName()
@@ -58,18 +61,10 @@ namespace CardFool
         {
             List<SCard> result = new List<SCard>();
 
-            if (GetCount() == 0) return result;
+            if (hand.Count == 0)
+                return result;
 
-            SCard bestLayCard = hand[0];
-
-            foreach (SCard card in hand)
-            {
-                if (GetAttackCardCost(card) < GetAttackCardCost(bestLayCard))
-                {
-                    bestLayCard = card;
-                }
-            }
-
+            SCard bestLayCard = ChooseBestLayCard();
             result.Add(bestLayCard);
             hand.Remove(bestLayCard);
 
@@ -84,21 +79,10 @@ namespace CardFool
 
             List<(int tableIndex, SCard coverCard)> plan = BuildDefensePlan(table);
 
-            if (plan.Count < CountOpenCards(table))
+            if (plan.Count != CountOpenCards(table))
                 return false;
 
-            foreach (var move in plan)
-            {
-                SCardPair pair = table[move.tableIndex];
-
-                if (!pair.SetUp(move.coverCard, MTable.GetTrump().Suit))
-                    return false;
-
-                table[move.tableIndex] = pair;
-                hand.Remove(move.coverCard);
-            }
-
-            return true;
+            return ApplyDefensePlan(table, plan);
         }
 
         // Подбросить карты
@@ -116,7 +100,7 @@ namespace CardFool
             if (candidates.Count == 0)
                 return false;
 
-            bool defenderFailed = HasOpenCards(table);
+            bool defenderFailed = CountOpenCards(table) > 0;
             int freePlaces = MTable.TotalCards - table.Count;
             List<SCard> cardsToAdd = ChooseCardsToAdd(candidates, defenderFailed, freePlaces);
 
@@ -128,6 +112,51 @@ namespace CardFool
             return true;
         }
 
+        // Вывести в консоль карты на руке
+        public void ShowHand()
+        {
+            Console.WriteLine("Hand " + name);
+
+            foreach (SCard card in hand)
+            {
+                MTable.ShowCard(card);
+                Console.Write(MTable.Separator);
+            }
+
+            Console.WriteLine();
+        }
+
+        // Первый ход
+        private SCard ChooseBestLayCard()
+        {
+            SCard bestCard = hand[0];
+
+            foreach (SCard card in hand)
+            {
+                if (GetAttackCardCost(card) < GetAttackCardCost(bestCard))
+                    bestCard = card;
+            }
+
+            return bestCard;
+        }
+
+        private bool ApplyDefensePlan(List<SCardPair> table, List<(int tableIndex, SCard coverCard)> plan)
+        {
+            foreach (var move in plan)
+            {
+                SCardPair pair = table[move.tableIndex];
+
+                if (!pair.SetUp(move.coverCard, GetTrumpSuit()))
+                    return false;
+
+                table[move.tableIndex] = pair;
+                hand.Remove(move.coverCard);
+            }
+
+            return true;
+        }
+
+        // Подкидывание
         private List<int> GetRanksOnTable(List<SCardPair> table)
         {
             List<int> ranks = new List<int>();
@@ -154,11 +183,6 @@ namespace CardFool
             }
 
             return candidates;
-        }
-
-        private bool HasOpenCards(List<SCardPair> table)
-        {
-            return CountOpenCards(table) > 0;
         }
 
         private List<SCard> ChooseCardsToAdd(List<SCard> candidates, bool defenderFailed, int freePlaces)
@@ -220,26 +244,18 @@ namespace CardFool
             }
         }
 
-        // Вывести в консоль карты на руке
-        public void ShowHand()
-        {
-            Console.WriteLine("Hand " + name);
-            foreach (SCard card in hand)
-            {
-                MTable.ShowCard(card);
-                Console.Write(MTable.Separator);
-            }
-            Console.WriteLine();
-        }
-
-
-        // вспомогательные методы
-
+        // Общие проверки карт
         private bool IsTrump(SCard card)
         {
-            return card.Suit == MTable.GetTrump().Suit;
+            return card.Suit == GetTrumpSuit();
         }
 
+        private Suits GetTrumpSuit()
+        {
+            return MTable.GetTrump().Suit;
+        }
+
+        // Оценка стоимости карт
         private int GetCardCost(SCard card)
         {
             int cost = card.Rank;
@@ -297,28 +313,21 @@ namespace CardFool
 
         private bool CanBeat(SCard attack, SCard cover)
         {
-           if (attack.Suit == cover.Suit)
-           {
+            if (attack.Suit == cover.Suit)
+            {
                 return cover.Rank > attack.Rank;
-           }
+            }
 
-           if (IsTrump(cover) && !IsTrump(attack)) return true;
+            if (IsTrump(cover) && !IsTrump(attack))
+                return true;
 
             return false;
         }
 
+        // Защита
         private List<(int tableIndex, SCard coverCard)> BuildDefensePlan(List<SCardPair> table)
         {
-            List<int> openIndexes = new List<int>();
-
-            for (int i = 0; i < table.Count; i++)
-            {
-                if (!table[i].Beaten)
-                    openIndexes.Add(i);
-            }
-
-            openIndexes.Sort((a, b) => GetAttackDifficulty(table[b].Down).CompareTo(GetAttackDifficulty(table[a].Down)));
-
+            List<int> openIndexes = GetOpenCardIndexes(table);
             List<SCard> availableCards = new List<SCard>(hand);
             List<(int tableIndex, SCard coverCard)> currentPlan = new List<(int, SCard)>();
             List<(int tableIndex, SCard coverCard)> bestPlan = new List<(int, SCard)>();
@@ -338,15 +347,7 @@ namespace CardFool
 
                 int tableIndex = openIndexes[position];
                 SCard attackCard = table[tableIndex].Down;
-                List<SCard> candidates = new List<SCard>();
-
-                foreach (SCard card in availableCards)
-                {
-                    if (CanBeat(attackCard, card))
-                        candidates.Add(card);
-                }
-
-                candidates.Sort((a, b) => GetDefenseCardCost(a, attackCard).CompareTo(GetDefenseCardCost(b, attackCard)));
+                List<SCard> candidates = GetCoverCandidates(attackCard, availableCards);
 
                 foreach (SCard card in candidates)
                 {
@@ -362,6 +363,34 @@ namespace CardFool
 
             Search(0, 0);
             return bestPlan;
+        }
+
+        private List<int> GetOpenCardIndexes(List<SCardPair> table)
+        {
+            List<int> openIndexes = new List<int>();
+
+            for (int i = 0; i < table.Count; i++)
+            {
+                if (!table[i].Beaten)
+                    openIndexes.Add(i);
+            }
+
+            openIndexes.Sort((a, b) => GetAttackDifficulty(table[b].Down).CompareTo(GetAttackDifficulty(table[a].Down)));
+            return openIndexes;
+        }
+
+        private List<SCard> GetCoverCandidates(SCard attackCard, List<SCard> availableCards)
+        {
+            List<SCard> candidates = new List<SCard>();
+
+            foreach (SCard card in availableCards)
+            {
+                if (CanBeat(attackCard, card))
+                    candidates.Add(card);
+            }
+
+            candidates.Sort((a, b) => GetDefenseCardCost(a, attackCard).CompareTo(GetDefenseCardCost(b, attackCard)));
+            return candidates;
         }
 
         private int CountOpenCards(List<SCardPair> table)
@@ -382,7 +411,7 @@ namespace CardFool
             int difficulty = card.Rank;
 
             if (IsTrump(card))
-                difficulty += 100;
+                difficulty += EarlyTrumpCost;
 
             return difficulty;
         }
@@ -418,6 +447,7 @@ namespace CardFool
             return cost;
         }
 
+        // Подсчет неизвестных карт
         private int CountUnknownCards()
         {
             return DeckSize - seenCards.Count;
@@ -457,7 +487,7 @@ namespace CardFool
         private bool IsHardToBeat(SCard card)
         {
             if (IsTrump(card))
-                return CountUnknownHigherSameSuit(card) <= 1;
+                return CountUnknownHigherSameSuit(card) <= UnknownHigherTrumpLimit;
 
             return CountUnknownHigherSameSuit(card) == 0 && CountUnknownTrumpCards() <= UnknownTrumpReserveLimit;
         }
@@ -480,6 +510,7 @@ namespace CardFool
             return cards;
         }
 
+        // Память увиденных карт
         private void RememberTable(List<SCardPair> table)
         {
             foreach (SCardPair pair in table)
